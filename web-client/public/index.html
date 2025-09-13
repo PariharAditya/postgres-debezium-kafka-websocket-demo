@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Kafka -> WebSocket Demo</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+            margin: 2rem;
+        }
+
+        pre {
+            background: #111;
+            color: #0f0;
+            padding: 1rem;
+            border-radius: 8px;
+            height: 50vh;
+            overflow: auto;
+        }
+
+        .status {
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Kafka -> WebSocket Demo</h1>
+    <div class="status" id="status">Connecting…</div>
+    <pre id="log"></pre>
+    <script src="/config.js"></script>
+    <script>
+        const logEl = document.getElementById('log');
+        const statusEl = document.getElementById('status');
+
+        // From compose: REACT_APP_WEBSOCKET_URL defaults to ws://localhost:3001
+        const wsUrl = (window.REACT_APP_WEBSOCKET_URL || 'ws://localhost:3001').replace(/^http/, 'ws');
+
+        function append(msg) {
+            logEl.textContent += (typeof msg === 'string' ? msg : JSON.stringify(msg)) + "\n";
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+
+        function connect() {
+            const ws = new WebSocket(wsUrl);
+            ws.onopen = () => { statusEl.textContent = 'Connected to ' + wsUrl; };
+            ws.onmessage = (e) => { append(e.data); };
+            ws.onclose = () => { statusEl.textContent = 'Disconnected. Reconnecting in 2s…'; setTimeout(connect, 2000); };
+            ws.onerror = (e) => { append('WS error: ' + e.message); };
+        }
+
+        connect();
+    </script>
+</body>
+
+</html>
